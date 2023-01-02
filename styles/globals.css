@@ -4,6 +4,6 @@
 
 @layer base {
   body {
-    @apply bg-navy text-cream;
+    @apply bg-primary-dark text-primary-light;
   }
 }
