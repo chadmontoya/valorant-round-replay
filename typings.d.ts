@@ -1,3 +1,5 @@
+import { Modes, Regions } from 'unofficial-valorant-api';
+
 export interface AbilityCasts {
   c_cast: number;
   e_cast: number;
@@ -62,6 +64,8 @@ export interface FriendlyFire {
 export interface Inputs {
   player_name: string;
   player_tag: string;
+  region: Regions;
+  game_mode: Modes;
 }
 
 export interface KillEvent {
