@@ -1,17 +1,18 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Match, Round } from '../typings';
+import { Account, Match } from '../typings';
 
 interface Props {
+  account: Account | null;
   matchItem: Match;
-  playerName: string;
 }
 
-export default function MatchItem({ matchItem, playerName }: Props) {
+export default function MatchItem({ account, matchItem }: Props) {
   const player = matchItem.players.all_players.find(
-    (player) => player.name === playerName
+    (player) => player.puuid === account?.puuid
   );
   const winningTeam = matchItem.teams.blue.has_won ? 'Blue' : 'Red';
+  const gameWon = player?.team === winningTeam;
 
   return (
     <li className='py-3'>
@@ -23,9 +24,7 @@ export default function MatchItem({ matchItem, playerName }: Props) {
       >
         <div
           className={`flex items-center space-x-4 border-l-2 ${
-            winningTeam === player?.team
-              ? 'border-[#17E5B4]'
-              : 'border-[#EE5350]'
+            gameWon ? 'border-[#17E5B4]' : 'border-[#EE5350]'
           }`}
         >
           <div className='flex-shrink-0 px-2'>
@@ -40,7 +39,7 @@ export default function MatchItem({ matchItem, playerName }: Props) {
             )}
           </div>
           <div className='flex-1 min-w-0'>
-            <p className='font-medium truncate'>{matchItem.metadata.map}</p>
+            <p className='font-medium'>{matchItem.metadata.map}</p>
             <p className='text-sm text-gray-400'>{matchItem.metadata.mode}</p>
           </div>
         </div>

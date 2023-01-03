@@ -1,3 +1,4 @@
+import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
@@ -23,5 +24,12 @@ export default function Match() {
     // console.log(rounds);
   };
 
-  return <div>match {router.query.id}</div>;
+  return (
+    <div>
+      <Head>
+        <title>Match Details</title>
+      </Head>
+      match {router.query.id}
+    </div>
+  );
 }

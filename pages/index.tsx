@@ -1,36 +1,47 @@
+import Head from 'next/head';
 import { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { Inputs, Match } from '../typings';
-
+import { Account, Inputs, Match } from '../typings';
 import HenrikDevValorantAPI from 'unofficial-valorant-api';
 import MatchList from '../components/MatchList';
 
 const VAPI = new HenrikDevValorantAPI();
 
 export default function Home() {
-  const [playerName, setPlayerName] = useState<string>('');
-  const [matches, setMatches] = useState<Match[]>([]);
+  const [account, setAccount] = useState<Account | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [matches, setMatches] = useState<Match[]>([]);
 
   const { register, handleSubmit } = useForm<Inputs>();
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
+    setAccount(null);
     setMatches([]);
     setLoading(true);
-    const matchList = await VAPI.getMatches({
-      region: data.region,
-      name: data.player_name,
-      tag: data.player_tag,
-      size: 10,
-      filter: data.game_mode,
-    });
+
+    // Fetch account data and match history in parallel
+
+    const [account, matchList] = await Promise.all([
+      VAPI.getAccount({ name: data.player_name, tag: data.player_tag }),
+      VAPI.getMatches({
+        region: data.region,
+        name: data.player_name,
+        tag: data.player_tag,
+        size: 10,
+        filter: data.game_mode,
+      }),
+    ]);
+
+    setAccount(account.data as Account);
     setMatches(matchList.data as Match[]);
-    setPlayerName(data.player_name);
     setLoading(false);
   };
 
   return (
     <div className='flex flex-col items-center'>
+      <Head>
+        <title>Valorant Round Replay</title>
+      </Head>
       <form onSubmit={handleSubmit(onSubmit)} className='w-9/12'>
         <div className='flex'>
           <div className='w-1/2 px-3'>
@@ -105,7 +116,8 @@ export default function Home() {
           </div>
           <div className='mt-auto px-3'>
             <button
-              className='bg-secondary-dark text-white font-bold py-3 px-4 rounded'
+              className='bg-secondary-dark text-white font-bold py-3 px-4 rounded disabled:opacity-40'
+              disabled={loading}
               type='submit'
             >
               Search
@@ -113,11 +125,7 @@ export default function Home() {
           </div>
         </div>
       </form>
-      <MatchList
-        matchList={matches}
-        loading={loading}
-        playerName={playerName}
-      />
+      <MatchList account={account} matchList={matches} loading={loading} />
     </div>
   );
 }

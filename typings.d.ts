@@ -7,6 +7,17 @@ export interface AbilityCasts {
   x_cast: number;
 }
 
+export interface Account {
+  account_level: string;
+  card: Card;
+  last_update: string;
+  last_update_raw: number;
+  name: string;
+  puuid: string;
+  region: string;
+  tag: string;
+}
+
 export interface Agent {
   bust: string;
   full: string;
