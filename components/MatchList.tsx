@@ -2,11 +2,12 @@ import { Match } from '../typings';
 import MatchItem from './MatchItem';
 
 interface Props {
-  matchList: Match[];
   loading: boolean;
+  matchList: Match[];
+  playerName: string;
 }
 
-export default function MatchList({ matchList, loading }: Props) {
+export default function MatchList({ matchList, loading, playerName }: Props) {
   return (
     <div className='mt-5 w-9/12 px-3'>
       {loading ? (
@@ -30,9 +31,15 @@ export default function MatchList({ matchList, loading }: Props) {
           <span className='sr-only'>Loading...</span>
         </div>
       ) : (
-        matchList.map((match) => (
-          <MatchItem key={match.metadata.matchid} matchItem={match} />
-        ))
+        <ul role='list' className='divide-y divide-gray-200'>
+          {matchList.map((match) => (
+            <MatchItem
+              key={match.metadata.matchid}
+              matchItem={match}
+              playerName={playerName}
+            />
+          ))}
+        </ul>
       )}
     </div>
   );

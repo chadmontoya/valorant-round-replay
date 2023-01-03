@@ -8,6 +8,7 @@ import MatchList from '../components/MatchList';
 const VAPI = new HenrikDevValorantAPI();
 
 export default function Home() {
+  const [playerName, setPlayerName] = useState<string>('');
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -24,6 +25,7 @@ export default function Home() {
       filter: data.game_mode,
     });
     setMatches(matchList.data as Match[]);
+    setPlayerName(data.player_name);
     setLoading(false);
   };
 
@@ -111,7 +113,11 @@ export default function Home() {
           </div>
         </div>
       </form>
-      <MatchList matchList={matches} loading={loading} />
+      <MatchList
+        matchList={matches}
+        loading={loading}
+        playerName={playerName}
+      />
     </div>
   );
 }
