@@ -24,7 +24,7 @@ export default function MatchItem({ account, matchItem }: Props) {
       >
         <div
           className={`flex items-center space-x-4 border-l-2 ${
-            gameWon ? 'border-[#17E5B4]' : 'border-[#EE5350]'
+            gameWon ? 'border-color-win' : 'border-color-lose'
           }`}
         >
           <div className='flex-shrink-0 px-2'>

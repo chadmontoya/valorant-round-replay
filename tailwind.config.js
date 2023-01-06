@@ -8,11 +8,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        'color-lose': '#EE5350',
+        'color-win': '#17E5B4',
         'primary-dark': '#0F1923',
         'primary-light': '#ECE8E1',
         'secondary-dark': '#FF4655',
       },
     },
   },
-  plugins: [require('flowbite/plugin')],
+  plugins: [
+    require('flowbite/plugin'),
+    require('tailwind-scrollbar')({ nocompatible: true }),
+  ],
 };

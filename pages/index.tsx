@@ -2,8 +2,8 @@ import Head from 'next/head';
 import { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Account, Inputs, Match } from '../typings';
-import HenrikDevValorantAPI from 'unofficial-valorant-api';
 import MatchList from '../components/MatchList';
+import HenrikDevValorantAPI from 'unofficial-valorant-api';
 
 const VAPI = new HenrikDevValorantAPI();
 

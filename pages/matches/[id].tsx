@@ -1,9 +1,9 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-
+import { Account, Round } from '../../typings';
+import RoundTab from '../../components/RoundTab';
 import HenrikDevValorantAPI from 'unofficial-valorant-api';
-import { Round } from '../../typings';
 
 const VAPI = new HenrikDevValorantAPI();
 
@@ -12,16 +12,15 @@ export default function Match() {
   const matchId = router.query.id;
 
   const [rounds, setRounds] = useState<Round[]>([]);
+  const [account, setAccount] = useState<Account | null>(null);
 
   useEffect(() => {
     if (!router.isReady) return;
-    console.log(matchId);
+    fetchData();
   }, [router.isReady, matchId]);
 
-  const fetchMatchData = async () => {
-    console.log(router.query.id);
-    // const rounds = await VAPI.getMatch({ match_id: router.query.id as string });
-    // console.log(rounds);
+  const fetchData = async () => {
+    const rounds = await VAPI.getMatch({ match_id: router.query.id as string });
   };
 
   return (
@@ -29,7 +28,11 @@ export default function Match() {
       <Head>
         <title>Match Details</title>
       </Head>
-      match {router.query.id}
+      <div className='flex overflow-x-auto scrollbar-thin scrollbar-thumb-secondary-dark scrollbar-thumb-rounded-full scrollbar-track-rounded-full'>
+        {Array.from({ length: 26 }, (_, i) => (
+          <RoundTab key={i + 1} roundNumber={i + 1} />
+        ))}
+      </div>
     </div>
   );
 }
