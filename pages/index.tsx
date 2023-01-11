@@ -2,6 +2,7 @@ import Head from 'next/head';
 import { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Account, Inputs, Match } from '../typings';
+
 import MatchList from '../components/MatchList';
 import HenrikDevValorantAPI from 'unofficial-valorant-api';
 
@@ -19,8 +20,6 @@ export default function Home() {
     setMatches([]);
     setLoading(true);
 
-    // Fetch account data and match history in parallel
-
     const [account, matchList] = await Promise.all([
       VAPI.getAccount({ name: data.player_name, tag: data.player_tag }),
       VAPI.getMatches({
@@ -32,8 +31,11 @@ export default function Home() {
       }),
     ]);
 
-    setAccount(account.data as Account);
-    setMatches(matchList.data as Match[]);
+    const accountData: Account = account.data as Account;
+    const matchListData: Match[] = matchList.data as Match[];
+
+    setAccount(accountData);
+    setMatches(matchListData);
     setLoading(false);
   };
 

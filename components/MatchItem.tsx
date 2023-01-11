@@ -18,8 +18,12 @@ export default function MatchItem({ account, matchItem }: Props) {
     <li className='py-3'>
       <Link
         href={{
-          pathname: 'matches/[id]',
-          query: { id: matchItem.metadata.matchid },
+          pathname: `[playerName]/[playerTag]/match/[id]`,
+          query: {
+            id: matchItem.metadata.matchid,
+            playerName: player?.name,
+            playerTag: player?.tag,
+          },
         }}
       >
         <div
