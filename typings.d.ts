@@ -48,6 +48,10 @@ export interface Card {
   wide: string;
 }
 
+export interface Content {
+  maps: Map[];
+}
+
 export interface DamageEvent {
   bodyshots: number;
   damage: number;

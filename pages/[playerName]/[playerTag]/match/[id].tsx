@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import {
   Account,
+  Content,
   Map,
   Match,
   MatchMetadata,
@@ -11,8 +12,8 @@ import {
 } from '../../../../typings';
 import RoundTab from '../../../../components/RoundTab';
 import HenrikDevValorantAPI from 'unofficial-valorant-api';
-import Image from 'next/image';
 import { DEFAULT_LOCALE } from '../../../../constants';
+import LoadingAnimation from '../../../../components/LoadingAnimation';
 
 const VAPI = new HenrikDevValorantAPI();
 
@@ -48,7 +49,8 @@ export default function MatchData() {
 
       const accountData: Account = account.data as Account;
       const matchData: Match = match.data as Match;
-      const mapData: Map[] = content.data.maps as Map[];
+      const contentData: Content = content.data as Content;
+      const mapData: Map[] = contentData.maps as Map[];
 
       const activeMap = mapData.find(
         (map) => map.name === matchData.metadata.map
@@ -74,11 +76,15 @@ export default function MatchData() {
       <Head>
         <title>Match Details</title>
       </Head>
-      <div className='flex overflow-x-auto scrollbar-thin scrollbar-thumb-secondary-dark scrollbar-thumb-rounded-full scrollbar-track-rounded-full'>
-        {loading ? (
-          <h1>loading...</h1>
-        ) : (
-          rounds.map((round, i) => (
+      {loading ? (
+        <div className='flex h-screen'>
+          <div className='m-auto'>
+            <LoadingAnimation />
+          </div>
+        </div>
+      ) : (
+        <div className='flex overflow-x-auto scrollbar-thin scrollbar-thumb-secondary-dark scrollbar-thumb-rounded-full scrollbar-track-rounded-full'>
+          {rounds.map((round, i) => (
             <RoundTab
               key={i + 1}
               handleRoundClick={handleRoundClick}
@@ -86,9 +92,9 @@ export default function MatchData() {
               round={round}
               roundNumber={i + 1}
             />
-          ))
-        )}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
