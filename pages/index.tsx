@@ -121,7 +121,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className='mt-6 md:mt-auto px-3 w-12/12'>
+          <div className='mt-6 md:mt-auto px-3'>
             <button
               className='bg-secondary-dark w-full text-white font-bold py-3 px-4 rounded disabled:opacity-40'
               disabled={loading}

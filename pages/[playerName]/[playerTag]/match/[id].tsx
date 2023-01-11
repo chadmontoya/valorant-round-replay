@@ -14,6 +14,7 @@ import RoundTab from '../../../../components/RoundTab';
 import HenrikDevValorantAPI from 'unofficial-valorant-api';
 import { DEFAULT_LOCALE } from '../../../../constants';
 import LoadingAnimation from '../../../../components/LoadingAnimation';
+import RoundReplay from '../../../../components/RoundReplay';
 
 const VAPI = new HenrikDevValorantAPI();
 
@@ -72,7 +73,7 @@ export default function MatchData() {
   };
 
   return (
-    <div>
+    <div className='container mx-auto mt-5 xl:max-w-max'>
       <Head>
         <title>Match Details</title>
       </Head>
@@ -95,6 +96,7 @@ export default function MatchData() {
           ))}
         </div>
       )}
+      <RoundReplay activeRound={rounds[0]} map={activeMap} />
     </div>
   );
 }

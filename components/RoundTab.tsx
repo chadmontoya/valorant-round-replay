@@ -17,12 +17,14 @@ export default function RoundTab({
 
   return (
     <div
-      className='flex flex-col justify-between border border-white items-center h-36 mx-1 mb-5 bg-primary-dark'
+      className='flex flex-col justify-between items-center h-36 mx-1 mb-5 bg-primary-dark-variant'
       onClick={() => {
         handleRoundClick(roundNumber);
       }}
     >
-      <div className='flex flex-col items-center w-12'>{roundNumber}</div>
+      <div className='flex flex-col items-center w-12 text-sm'>
+        {roundNumber}
+      </div>
       <div
         className={`w-3/5 h-0.5 ${
           roundWon ? 'bg-color-win' : 'bg-color-lose'
