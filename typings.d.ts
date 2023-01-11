@@ -102,6 +102,11 @@ export interface Location {
   y: string;
 }
 
+export interface Map {
+  id: string;
+  name: string;
+}
+
 export interface Match {
   metadata: MatchMetadata;
   players: { all_players: Player[]; red: Player[]; blue: Player[] };

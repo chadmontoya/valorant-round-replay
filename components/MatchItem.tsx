@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { BLUE_TEAM, RED_TEAM } from '../constants';
 import { Account, Match } from '../typings';
 
 interface Props {
@@ -11,7 +12,7 @@ export default function MatchItem({ account, matchItem }: Props) {
   const player = matchItem.players.all_players.find(
     (player) => player.puuid === account?.puuid
   );
-  const winningTeam = matchItem.teams.blue.has_won ? 'Blue' : 'Red';
+  const winningTeam = matchItem.teams.blue.has_won ? BLUE_TEAM : RED_TEAM;
   const gameWon = player?.team === winningTeam;
 
   return (

@@ -1,16 +1,27 @@
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { Account, Match, Player, Round } from '../../../../typings';
+import {
+  Account,
+  Map,
+  Match,
+  MatchMetadata,
+  Player,
+  Round,
+} from '../../../../typings';
 import RoundTab from '../../../../components/RoundTab';
 import HenrikDevValorantAPI from 'unofficial-valorant-api';
+import Image from 'next/image';
+import { DEFAULT_LOCALE } from '../../../../constants';
 
 const VAPI = new HenrikDevValorantAPI();
 
 export default function MatchData() {
   const [account, setAccount] = useState<Account | null>(null);
+  const [activeMap, setActiveMap] = useState<Map | null | undefined>(null);
   const [activeRound, setActiveRound] = useState<number>(1);
   const [loading, setLoading] = useState<boolean>(false);
+  const [metadata, setMetadata] = useState<MatchMetadata | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [rounds, setRounds] = useState<Round[]>([]);
 
@@ -26,20 +37,28 @@ export default function MatchData() {
     const fetchData = async () => {
       setLoading(true);
 
-      const [account, match] = await Promise.all([
+      const [account, match, content] = await Promise.all([
         VAPI.getAccount({
           name: playerName as string,
           tag: playerTag as string,
         }),
         VAPI.getMatch({ match_id: matchId as string }),
+        VAPI.getContent({ locale: DEFAULT_LOCALE }),
       ]);
 
       const accountData: Account = account.data as Account;
       const matchData: Match = match.data as Match;
+      const mapData: Map[] = content.data.maps as Map[];
+
+      const activeMap = mapData.find(
+        (map) => map.name === matchData.metadata.map
+      );
 
       setAccount(accountData);
-      setRounds(matchData.rounds);
+      setActiveMap(activeMap);
+      setMetadata(matchData.metadata);
       setPlayers(matchData.players.all_players);
+      setRounds(matchData.rounds);
       setLoading(false);
     };
 
@@ -70,7 +89,6 @@ export default function MatchData() {
           ))
         )}
       </div>
-      {activeRound}
     </div>
   );
 }
