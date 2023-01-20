@@ -102,13 +102,32 @@ export interface KillEvent {
 }
 
 export interface Location {
-  x: string;
-  y: string;
+  x: number;
+  y: number;
 }
 
 export interface Map {
   id: string;
   name: string;
+}
+
+export interface MapData {
+  assetPath: string;
+  coordinates: string;
+  displayIcon: string;
+  displayName: string;
+  listViewIcon: string;
+  mapUrl: string;
+  splash: string;
+  uuid: string;
+  xMultiplier: number;
+  xScalarToAdd: number;
+  yMultiplier: number;
+  yScalarToAdd: number;
+}
+
+export interface MapDataResponse {
+  data: MapData;
 }
 
 export interface Match {

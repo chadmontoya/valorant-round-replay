@@ -25,6 +25,7 @@
     "unofficial-valorant-api": "^2.3.0-stable.0"
   },
   "devDependencies": {
+    "@types/d3": "^7.4.0",
     "autoprefixer": "^10.4.13",
     "postcss": "^8.4.20",
     "tailwind-scrollbar": "^2.1.0",

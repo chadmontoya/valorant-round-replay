@@ -23,7 +23,7 @@ export default function RoundTab({
       }}
     >
       <div className='flex flex-col items-center w-12 text-sm'>
-        {roundNumber}
+        {roundNumber + 1}
       </div>
       <div
         className={`w-3/5 h-0.5 ${

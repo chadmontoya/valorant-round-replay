@@ -5,6 +5,8 @@ import {
   Account,
   Content,
   Map,
+  MapData,
+  MapDataResponse,
   Match,
   MatchMetadata,
   Player,
@@ -12,17 +14,18 @@ import {
 } from '../../../../typings';
 import RoundTab from '../../../../components/RoundTab';
 import HenrikDevValorantAPI from 'unofficial-valorant-api';
-import { DEFAULT_LOCALE } from '../../../../constants';
+import { DEFAULT_LOCALE, MAP_ENDPOINT } from '../../../../constants';
 import LoadingAnimation from '../../../../components/LoadingAnimation';
-import RoundReplay from '../../../../components/RoundReplay';
+import MapDisplay from '../../../../components/MapDisplay';
 
 const VAPI = new HenrikDevValorantAPI();
 
 export default function MatchData() {
   const [account, setAccount] = useState<Account | null>(null);
-  const [activeMap, setActiveMap] = useState<Map | null | undefined>(null);
-  const [activeRound, setActiveRound] = useState<number>(1);
+  const [activeRoundNumber, setActiveRoundNumber] = useState<number>(0);
+  const [activeRoundData, setActiveRoundData] = useState<Round | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  const [mapData, setMapData] = useState<MapData | null>(null);
   const [metadata, setMetadata] = useState<MatchMetadata | null>(null);
   const [players, setPlayers] = useState<Player[]>([]);
   const [rounds, setRounds] = useState<Round[]>([]);
@@ -36,6 +39,7 @@ export default function MatchData() {
 
   useEffect(() => {
     if (!router.isReady) return;
+
     const fetchData = async () => {
       setLoading(true);
 
@@ -51,17 +55,17 @@ export default function MatchData() {
       const accountData: Account = account.data as Account;
       const matchData: Match = match.data as Match;
       const contentData: Content = content.data as Content;
-      const mapData: Map[] = contentData.maps as Map[];
-
-      const activeMap = mapData.find(
-        (map) => map.name === matchData.metadata.map
-      );
+      const maps: Map[] = contentData.maps as Map[];
+      const activeMap = maps.find((map) => map.name === matchData.metadata.map);
+      const res = await fetch(`${MAP_ENDPOINT}/${activeMap!.id}`);
+      const mapData: MapDataResponse = await res.json();
 
       setAccount(accountData);
-      setActiveMap(activeMap);
+      setMapData(mapData.data);
       setMetadata(matchData.metadata);
       setPlayers(matchData.players.all_players);
       setRounds(matchData.rounds);
+      setActiveRoundData(matchData.rounds[0]);
       setLoading(false);
     };
 
@@ -69,7 +73,8 @@ export default function MatchData() {
   }, [router.isReady, playerName, playerTag, matchId]);
 
   const handleRoundClick = (roundNumber: number) => {
-    setActiveRound(roundNumber);
+    setActiveRoundNumber(roundNumber);
+    setActiveRoundData(rounds[roundNumber]);
   };
 
   return (
@@ -87,16 +92,19 @@ export default function MatchData() {
         <div className='flex overflow-x-auto scrollbar-thin scrollbar-thumb-secondary-dark scrollbar-thumb-rounded-full scrollbar-track-rounded-full'>
           {rounds.map((round, i) => (
             <RoundTab
-              key={i + 1}
+              key={i}
               handleRoundClick={handleRoundClick}
               player={player}
               round={round}
-              roundNumber={i + 1}
+              roundNumber={i}
             />
           ))}
         </div>
       )}
-      <RoundReplay activeRound={rounds[0]} map={activeMap} />
+      <div className='mt-5 flex flex-col justify-between lg:flex-row-reverse xl:mt-0'>
+        <div className='w-1/2'>{activeRoundNumber}</div>
+        <MapDisplay activeRound={activeRoundData} mapData={mapData} />
+      </div>
     </div>
   );
 }
