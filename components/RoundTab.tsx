@@ -17,7 +17,7 @@ export default function RoundTab({
 
   return (
     <div
-      className='flex flex-col justify-between items-center h-36 mx-1 mb-5 bg-primary-dark-variant'
+      className='flex flex-col justify-between items-center h-36 mx-1 mb-5 bg-primary-dark-variant cursor-pointer hover:opacity-50'
       onClick={() => {
         handleRoundClick(roundNumber);
       }}
