@@ -90,11 +90,13 @@ export interface KillEvent {
   damage_weapon_name: string;
   kill_time_in_match: number;
   kill_time_in_round: number;
+  killer_assets: Assets;
   killer_puuid: string;
-  kill_display_name: string;
+  killer_display_name: string;
   killer_team: string;
   player_locations_on_kill: PlayerLocation[];
   secondary_fire_mode: boolean;
+  victim_assets: Assets;
   victim_death_location: Location;
   victim_display_name: string;
   victim_puuid: string;

@@ -102,8 +102,12 @@ export default function MatchData() {
         </div>
       )}
       <div className='mt-5 flex flex-col justify-between lg:flex-row-reverse xl:mt-0'>
-        <div className='w-1/2'>{activeRoundNumber}</div>
-        <MapDisplay activeRound={activeRoundData} mapData={mapData} />
+        <div className='w-1/2'></div>
+        <MapDisplay
+          activeRound={activeRoundData}
+          mapData={mapData}
+          players={players}
+        />
       </div>
     </div>
   );
