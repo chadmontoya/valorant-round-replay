@@ -30,7 +30,7 @@ export default function MatchItem({ account, matchItem }: Props) {
         <div
           className={`flex items-center space-x-4 border-l-2 ${
             gameWon ? 'border-color-win' : 'border-color-lose'
-          }`}
+          } hover:opacity-70`}
         >
           <div className='flex-shrink-0 px-2'>
             {player?.assets.agent.small && (

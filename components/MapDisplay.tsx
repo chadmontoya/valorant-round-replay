@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Assets, KillEvent, MapData, Player, Round } from '../typings';
+import MediaButton from './MediaButton';
 
 interface Props {
   activeRound: Round | null;
@@ -11,6 +12,7 @@ interface Props {
 export default function MapDisplay({ activeRound, mapData, players }: Props) {
   const [mapSize, setMapSize] = useState<number>(0);
   const [playerAssets, setPlayerAssets] = useState<Map<string, Assets>>();
+  const [playing, setPlaying] = useState<boolean>(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -33,11 +35,11 @@ export default function MapDisplay({ activeRound, mapData, players }: Props) {
       activeRound.player_stats.forEach((playerStat) => {
         killEvents = killEvents.concat(playerStat.kill_events);
       });
-    }
 
-    killEvents.sort((killOne, killTwo) =>
-      killOne.kill_time_in_round < killTwo.kill_time_in_round ? -1 : 1
-    );
+      killEvents.sort((killOne, killTwo) =>
+        killOne.kill_time_in_round < killTwo.kill_time_in_round ? -1 : 1
+      );
+    }
 
     if (playerAssets) {
       killEvents.forEach((killEvent) => {
@@ -66,6 +68,7 @@ export default function MapDisplay({ activeRound, mapData, players }: Props) {
         }
       });
     }
+    setPlaying(false);
   }, [activeRound, mapSize]);
 
   useEffect(() => {
@@ -79,10 +82,24 @@ export default function MapDisplay({ activeRound, mapData, players }: Props) {
     setPlayerAssets(playerAssets);
   }, [players]);
 
+  const handlePlay = () => {
+    setPlaying(true);
+  };
+
+  const handlePause = () => {
+    setPlaying(false);
+  };
+
   return (
     <div>
       {mapData && (
         <div>
+          {mapSize > 0 && (
+            <MediaButton
+              handleClick={playing ? handlePause : handlePlay}
+              playing={playing}
+            />
+          )}
           <canvas
             className='absolute'
             width={mapSize}
