@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import { Assets, KillEvent, MapData, Player, Round } from '../typings';
 import MediaButton from './MediaButton';
+import { SECONDS_IN_MINUTES } from '../constants';
 
 interface Props {
   activeRound: Round | null;
@@ -10,9 +11,13 @@ interface Props {
 }
 
 export default function MapDisplay({ activeRound, mapData, players }: Props) {
+  const [intervalId, setIntervalId] = useState<number>(0);
+  const [killEvents, setKillEvents] = useState<KillEvent[]>([]);
   const [mapSize, setMapSize] = useState<number>(0);
   const [playerAssets, setPlayerAssets] = useState<Map<string, Assets>>();
   const [playing, setPlaying] = useState<boolean>(false);
+  const [timer, setTimer] = useState<number>(0);
+
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -31,45 +36,27 @@ export default function MapDisplay({ activeRound, mapData, players }: Props) {
   useEffect(() => {
     let killEvents: KillEvent[] = [];
 
-    if (activeRound) {
-      activeRound.player_stats.forEach((playerStat) => {
-        killEvents = killEvents.concat(playerStat.kill_events);
-      });
+    activeRound?.player_stats.forEach((playerStat) => {
+      killEvents = killEvents.concat(playerStat.kill_events);
+    });
 
-      killEvents.sort((killOne, killTwo) =>
-        killOne.kill_time_in_round < killTwo.kill_time_in_round ? -1 : 1
-      );
-    }
+    killEvents.sort((killOne, killTwo) =>
+      killOne.kill_time_in_round < killTwo.kill_time_in_round ? -1 : 1
+    );
 
-    if (playerAssets) {
-      killEvents.forEach((killEvent) => {
-        killEvent.killer_assets = playerAssets.get(
-          killEvent.killer_display_name
-        ) as Assets;
-        killEvent.victim_assets = playerAssets.get(
-          killEvent.victim_display_name
-        ) as Assets;
-      });
-    }
-
-    if (mapData) {
-      killEvents.forEach((killEvent) => {
-        if (canvasRef.current) {
-          const imgX =
-            (killEvent.victim_death_location.y * mapData.xMultiplier +
-              mapData.xScalarToAdd) *
-            mapSize;
-          const imgY =
-            (killEvent.victim_death_location.x * mapData.yMultiplier +
-              mapData.yScalarToAdd) *
-            mapSize;
-          const context = canvasRef.current.getContext('2d');
-          context?.fillRect(imgX, imgY, 10, 10);
-        }
-      });
-    }
+    killEvents.forEach((killEvent) => {
+      killEvent.killer_assets = playerAssets?.get(
+        killEvent.killer_display_name
+      ) as Assets;
+      killEvent.victim_assets = playerAssets?.get(
+        killEvent.victim_display_name
+      ) as Assets;
+    });
+    console.log(killEvents);
+    setKillEvents(killEvents);
     setPlaying(false);
-  }, [activeRound, mapSize]);
+    setTimer(0);
+  }, [activeRound, playerAssets]);
 
   useEffect(() => {
     const playerAssets = new Map<string, Assets>();
@@ -82,12 +69,36 @@ export default function MapDisplay({ activeRound, mapData, players }: Props) {
     setPlayerAssets(playerAssets);
   }, [players]);
 
-  const handlePlay = () => {
-    setPlaying(true);
+  const delay = (ms: number) => {
+    return new Promise((res) => setTimeout(res, ms));
   };
 
-  const handlePause = () => {
+  const secondsToTimeDisplay = (seconds: number) => {
+    var minutes = Math.floor(seconds / SECONDS_IN_MINUTES);
+    var seconds = seconds % SECONDS_IN_MINUTES;
+
+    return minutes.toString() + ':' + (seconds < 10 ? '0' : '') + seconds;
+  };
+
+  const handlePlay = async () => {
+    setPlaying(true);
+    var intervalId = window.setInterval(() => {
+      setTimer((prevTimer) => prevTimer + 1);
+    }, 1000);
+    for (var i = 0; i < killEvents.length; i++) {
+      if (i == 0) {
+        await delay(killEvents[i].kill_time_in_round);
+        console.log(killEvents[i]);
+      } else {
+        await delay(
+          killEvents[i].kill_time_in_round -
+            killEvents[i - 1].kill_time_in_round
+        );
+        console.log(killEvents[i]);
+      }
+    }
     setPlaying(false);
+    window.clearInterval(intervalId);
   };
 
   return (
@@ -95,10 +106,7 @@ export default function MapDisplay({ activeRound, mapData, players }: Props) {
       {mapData && (
         <div>
           {mapSize > 0 && (
-            <MediaButton
-              handleClick={playing ? handlePause : handlePlay}
-              playing={playing}
-            />
+            <MediaButton handleClick={handlePlay} playing={playing} />
           )}
           <canvas
             className='absolute'
@@ -119,6 +127,7 @@ export default function MapDisplay({ activeRound, mapData, players }: Props) {
           />
         </div>
       )}
+      <h1>{secondsToTimeDisplay(timer)}</h1>
     </div>
   );
 }
