@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import {
   Account,
   Content,
+  KillEvent,
   Map,
   MapData,
   MapDataResponse,
@@ -17,6 +18,7 @@ import HenrikDevValorantAPI from 'unofficial-valorant-api';
 import { DEFAULT_LOCALE, MAP_ENDPOINT } from '../../../../constants';
 import LoadingAnimation from '../../../../components/LoadingAnimation';
 import MapDisplay from '../../../../components/MapDisplay';
+import KillBanner from '../../../../components/KillBanner';
 
 const VAPI = new HenrikDevValorantAPI();
 
@@ -24,6 +26,7 @@ export default function MatchData() {
   const [account, setAccount] = useState<Account | null>(null);
   const [activeRoundNumber, setActiveRoundNumber] = useState<number>(0);
   const [activeRoundData, setActiveRoundData] = useState<Round | null>(null);
+  const [killEvents, setKillEvents] = useState<KillEvent[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [mapData, setMapData] = useState<MapData | null>(null);
   const [metadata, setMetadata] = useState<MatchMetadata | null>(null);
@@ -72,13 +75,29 @@ export default function MatchData() {
     fetchData();
   }, [router.isReady, playerName, playerTag, matchId]);
 
+  useEffect(() => {
+    clearKillEvents();
+  }, [activeRoundNumber]);
+
   const handleRoundClick = (roundNumber: number) => {
     setActiveRoundNumber(roundNumber);
     setActiveRoundData(rounds[roundNumber]);
   };
 
+  const addKillEvent = (newKillEvent: KillEvent) => {
+    setKillEvents((prevKills) => [...prevKills, newKillEvent]);
+  };
+
+  const clearKillEvents = () => {
+    setKillEvents([]);
+  };
+
+  const killBanners = killEvents.map((killEvent, i) => (
+    <KillBanner player={player} killEvent={killEvent} key={i} />
+  ));
+
   return (
-    <div className='container mx-auto mt-5 xl:max-w-max'>
+    <div className='container mx-auto mt-5'>
       <Head>
         <title>Match Details</title>
       </Head>
@@ -101,13 +120,19 @@ export default function MatchData() {
           ))}
         </div>
       )}
-      <div className='mt-5 flex flex-col justify-between lg:flex-row-reverse select-none xl:mt-0'>
-        <div className='w-1/2'></div>
-        <MapDisplay
-          activeRound={activeRoundData}
-          mapData={mapData}
-          players={players}
-        />
+      <div className='mt-5 flex flex-col-reverse lg:flex-row-reverse justify-between select-none xl:mt-0'>
+        <div className='lg:w-1/2 relative right-0'>
+          <div className='right-0 space-y-3'>{killBanners}</div>
+        </div>
+        <div className='lg:w-1/2'>
+          <MapDisplay
+            activeRound={activeRoundData}
+            addKillEvent={addKillEvent}
+            clearKillEvents={clearKillEvents}
+            mapData={mapData}
+            players={players}
+          />
+        </div>
       </div>
     </div>
   );

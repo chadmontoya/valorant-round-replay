@@ -6,12 +6,19 @@ import { SECONDS_IN_MINUTES } from '../constants';
 
 interface Props {
   activeRound: Round | null;
+  addKillEvent: (newKillEvent: KillEvent) => void;
+  clearKillEvents: () => void;
   mapData: MapData | null;
   players: Player[];
 }
 
-export default function MapDisplay({ activeRound, mapData, players }: Props) {
-  const [intervalId, setIntervalId] = useState<number>(0);
+export default function MapDisplay({
+  activeRound,
+  addKillEvent,
+  clearKillEvents,
+  mapData,
+  players,
+}: Props) {
   const [killEvents, setKillEvents] = useState<KillEvent[]>([]);
   const [mapSize, setMapSize] = useState<number>(0);
   const [playerAssets, setPlayerAssets] = useState<Map<string, Assets>>();
@@ -52,7 +59,6 @@ export default function MapDisplay({ activeRound, mapData, players }: Props) {
         killEvent.victim_display_name
       ) as Assets;
     });
-    console.log(killEvents);
     setKillEvents(killEvents);
     setPlaying(false);
     setTimer(0);
@@ -81,21 +87,19 @@ export default function MapDisplay({ activeRound, mapData, players }: Props) {
   };
 
   const handlePlay = async () => {
+    setTimer(0);
+    clearKillEvents();
     setPlaying(true);
     var intervalId = window.setInterval(() => {
       setTimer((prevTimer) => prevTimer + 1);
     }, 1000);
-    for (var i = 0; i < killEvents.length; i++) {
-      if (i == 0) {
-        await delay(killEvents[i].kill_time_in_round);
-        console.log(killEvents[i]);
-      } else {
-        await delay(
-          killEvents[i].kill_time_in_round -
-            killEvents[i - 1].kill_time_in_round
-        );
-        console.log(killEvents[i]);
-      }
+    await delay(killEvents[0].kill_time_in_round);
+    addKillEvent(killEvents[0]);
+    for (var i = 1; i < killEvents.length; i++) {
+      await delay(
+        killEvents[i].kill_time_in_round - killEvents[i - 1].kill_time_in_round
+      );
+      addKillEvent(killEvents[i]);
     }
     setPlaying(false);
     window.clearInterval(intervalId);
@@ -103,31 +107,35 @@ export default function MapDisplay({ activeRound, mapData, players }: Props) {
 
   return (
     <div>
-      {mapData && (
-        <div>
-          {mapSize > 0 && (
-            <MediaButton handleClick={handlePlay} playing={playing} />
-          )}
-          <canvas
-            className='absolute'
-            width={mapSize}
-            height={mapSize}
-            ref={canvasRef}
-          />
-          <Image
-            src={mapData.displayIcon}
-            alt={mapData.displayName}
-            width={1024}
-            height={1024}
-            ref={imageRef}
-            priority
-            onLoad={() => {
-              setMapSize(imageRef.current!.width);
-            }}
-          />
-        </div>
-      )}
-      <h1>{secondsToTimeDisplay(timer)}</h1>
+      <div>
+        {mapData && (
+          <div className='relative'>
+            {mapSize > 0 && !playing && (
+              <MediaButton handleClick={handlePlay} />
+            )}
+            <h1 className='text-xl absolute right-0 z-10'>
+              {typeof timer == 'number' && secondsToTimeDisplay(timer)}
+            </h1>
+            <canvas
+              className='absolute'
+              width={mapSize}
+              height={mapSize}
+              ref={canvasRef}
+            />
+            <Image
+              src={mapData.displayIcon}
+              alt={mapData.displayName}
+              width={1024}
+              height={1024}
+              ref={imageRef}
+              priority
+              onLoad={() => {
+                setMapSize(imageRef.current!.width);
+              }}
+            />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
