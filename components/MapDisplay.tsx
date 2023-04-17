@@ -79,11 +79,12 @@ export default function MapDisplay({
     return new Promise((res) => setTimeout(res, ms));
   };
 
-  const secondsToTimeDisplay = (seconds: number) => {
-    var minutes = Math.floor(seconds / SECONDS_IN_MINUTES);
-    var seconds = seconds % SECONDS_IN_MINUTES;
-
-    return minutes.toString() + ':' + (seconds < 10 ? '0' : '') + seconds;
+  const formatSeconds = (seconds: number): string => {
+    const minutes = Math.floor(seconds / SECONDS_IN_MINUTES);
+    const remainingSeconds = seconds % SECONDS_IN_MINUTES;
+    const minutesString = minutes.toString().padStart(2, '0');
+    const secondsString = remainingSeconds.toString().padStart(2, '0');
+    return `${minutesString}:${secondsString}`;
   };
 
   const handlePlay = async () => {
@@ -105,6 +106,8 @@ export default function MapDisplay({
     window.clearInterval(intervalId);
   };
 
+  const formattedTime = formatSeconds(timer);
+
   return (
     <div>
       <div>
@@ -113,9 +116,7 @@ export default function MapDisplay({
             {mapSize > 0 && !playing && (
               <MediaButton handleClick={handlePlay} />
             )}
-            <h1 className='text-xl absolute right-0 z-10'>
-              {typeof timer == 'number' && secondsToTimeDisplay(timer)}
-            </h1>
+            <h1 className='text-xl absolute right-0 z-10'>{formattedTime}</h1>
             <canvas
               className='absolute'
               width={mapSize}
