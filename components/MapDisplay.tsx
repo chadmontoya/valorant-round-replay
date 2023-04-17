@@ -24,6 +24,8 @@ export default function MapDisplay({
   const [playerAssets, setPlayerAssets] = useState<Map<string, Assets>>();
   const [playing, setPlaying] = useState<boolean>(false);
   const [timer, setTimer] = useState<number>(0);
+  const [timerId, setTimerId] = useState<number>(0);
+  const [killTimerId, setKillTimerId] = useState<NodeJS.Timeout | null>(null);
 
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -59,9 +61,17 @@ export default function MapDisplay({
         killEvent.victim_display_name
       ) as Assets;
     });
+
+    if (killTimerId) {
+      clearTimeout(killTimerId);
+    }
+
+    window.clearInterval(timerId);
     setKillEvents(killEvents);
     setPlaying(false);
     setTimer(0);
+    setTimerId(0);
+    setKillTimerId(null);
   }, [activeRound, playerAssets]);
 
   useEffect(() => {
@@ -76,7 +86,10 @@ export default function MapDisplay({
   }, [players]);
 
   const delay = (ms: number) => {
-    return new Promise((res) => setTimeout(res, ms));
+    return new Promise((res) => {
+      const timeoutId = setTimeout(res, ms);
+      setKillTimerId(timeoutId);
+    });
   };
 
   const formatSeconds = (seconds: number): string => {
@@ -94,6 +107,7 @@ export default function MapDisplay({
     var intervalId = window.setInterval(() => {
       setTimer((prevTimer) => prevTimer + 1);
     }, 1000);
+    setTimerId(intervalId);
     await delay(killEvents[0].kill_time_in_round);
     addKillEvent(killEvents[0]);
     for (var i = 1; i < killEvents.length; i++) {
@@ -104,6 +118,7 @@ export default function MapDisplay({
     }
     setPlaying(false);
     window.clearInterval(intervalId);
+    setTimerId(0);
   };
 
   const formattedTime = formatSeconds(timer);
