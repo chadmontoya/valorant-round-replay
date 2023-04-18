@@ -108,19 +108,22 @@ export default function MatchData() {
           </div>
         </div>
       ) : (
-        <div className='flex overflow-x-auto scrollbar-thin scrollbar-thumb-secondary-dark scrollbar-thumb-rounded-full scrollbar-track-rounded-full'>
-          {rounds.map((round, i) => (
-            <RoundTab
-              key={i}
-              handleRoundClick={handleRoundClick}
-              player={player}
-              round={round}
-              roundNumber={i}
-            />
-          ))}
+        <div>
+          <h1>Round {activeRoundNumber + 1}</h1>
+          <div className='flex overflow-x-auto scrollbar-thin scrollbar-thumb-secondary-dark scrollbar-thumb-rounded-full scrollbar-track-rounded-full'>
+            {rounds.map((round, i) => (
+              <RoundTab
+                key={i}
+                handleRoundClick={handleRoundClick}
+                player={player}
+                round={round}
+                roundNumber={i}
+              />
+            ))}
+          </div>
         </div>
       )}
-      <div className='mt-5 flex flex-col-reverse lg:flex-row-reverse justify-between select-none xl:mt-0'>
+      <div className='flex flex-col-reverse mt-3 2xl:mt-0 lg:flex-row-reverse justify-between select-none'>
         <div className='lg:w-1/2 relative right-0'>
           <div className='right-0 space-y-3'>{killBanners}</div>
         </div>

@@ -1,8 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
-import { Assets, KillEvent, MapData, Player, Round } from '../typings';
+import {
+  Assets,
+  KillEvent,
+  Location,
+  MapData,
+  Player,
+  Round,
+} from '../typings';
 import MediaButton from './MediaButton';
 import { SECONDS_IN_MINUTES } from '../constants';
+
+import deathMarker from '../public/death-marker.svg';
 
 interface Props {
   activeRound: Round | null;
@@ -20,12 +29,13 @@ export default function MapDisplay({
   players,
 }: Props) {
   const [killEvents, setKillEvents] = useState<KillEvent[]>([]);
+  const [killTimerId, setKillTimerId] = useState<NodeJS.Timeout | null>(null);
   const [mapSize, setMapSize] = useState<number>(0);
   const [playerAssets, setPlayerAssets] = useState<Map<string, Assets>>();
+  const [playerLocations, setPlayerLocations] = useState<Location[]>([]);
   const [playing, setPlaying] = useState<boolean>(false);
   const [timer, setTimer] = useState<number>(0);
   const [timerId, setTimerId] = useState<number>(0);
-  const [killTimerId, setKillTimerId] = useState<NodeJS.Timeout | null>(null);
 
   const imageRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -66,12 +76,16 @@ export default function MapDisplay({
       clearTimeout(killTimerId);
     }
 
+    const context = canvasRef.current?.getContext('2d');
+    context?.clearRect(0, 0, mapSize, mapSize);
+
     window.clearInterval(timerId);
     setKillEvents(killEvents);
+    setKillTimerId(null);
     setPlaying(false);
+    setPlayerLocations([]);
     setTimer(0);
     setTimerId(0);
-    setKillTimerId(null);
   }, [activeRound, playerAssets]);
 
   useEffect(() => {
@@ -84,6 +98,26 @@ export default function MapDisplay({
     });
     setPlayerAssets(playerAssets);
   }, [players]);
+
+  useEffect(() => {
+    if (mapData) {
+      const image = new window.Image();
+      image.src = deathMarker.src;
+      playerLocations.forEach((location) => {
+        if (canvasRef.current) {
+          const imgX =
+            (location.y * mapData.xMultiplier + mapData.xScalarToAdd) * mapSize;
+          const imgY =
+            (location.x * mapData.yMultiplier + mapData.yScalarToAdd) * mapSize;
+          const context = canvasRef.current.getContext('2d');
+          image.onload = () => {
+            context?.drawImage(image, imgX, imgY);
+          };
+          // context?.fillRect(imgX, imgY, 10, 10);
+        }
+      });
+    }
+  }, [mapSize, playerLocations]);
 
   const delay = (ms: number) => {
     return new Promise((res) => {
@@ -104,17 +138,26 @@ export default function MapDisplay({
     setTimer(0);
     clearKillEvents();
     setPlaying(true);
+    setPlayerLocations([]);
     var intervalId = window.setInterval(() => {
       setTimer((prevTimer) => prevTimer + 1);
     }, 1000);
     setTimerId(intervalId);
     await delay(killEvents[0].kill_time_in_round);
     addKillEvent(killEvents[0]);
+    setPlayerLocations([
+      ...playerLocations,
+      killEvents[0].victim_death_location,
+    ]);
     for (var i = 1; i < killEvents.length; i++) {
       await delay(
         killEvents[i].kill_time_in_round - killEvents[i - 1].kill_time_in_round
       );
       addKillEvent(killEvents[i]);
+      setPlayerLocations([
+        ...playerLocations,
+        killEvents[i].victim_death_location,
+      ]);
     }
     setPlaying(false);
     window.clearInterval(intervalId);
