@@ -94,6 +94,7 @@ export interface KillEvent {
   killer_puuid: string;
   killer_display_name: string;
   killer_team: string;
+  killer_location: Location;
   player_locations_on_kill: PlayerLocation[];
   secondary_fire_mode: boolean;
   victim_assets: Assets;
@@ -101,6 +102,12 @@ export interface KillEvent {
   victim_display_name: string;
   victim_puuid: string;
   victim_team: string;
+}
+
+export interface KillerLocation {
+  asset: string;
+  x: number;
+  y: number;
 }
 
 export interface Location {

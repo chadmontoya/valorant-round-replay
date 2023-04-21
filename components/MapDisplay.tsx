@@ -3,6 +3,7 @@ import Image from 'next/image';
 import {
   Assets,
   KillEvent,
+  KillerLocation,
   Location,
   MapData,
   Player,
@@ -28,11 +29,12 @@ export default function MapDisplay({
   mapData,
   players,
 }: Props) {
+  const [deathLocations, setDeathLocations] = useState<Location[]>([]);
   const [killEvents, setKillEvents] = useState<KillEvent[]>([]);
   const [killTimerId, setKillTimerId] = useState<NodeJS.Timeout | null>(null);
+  const [killerLocations, setKillerLocations] = useState<KillerLocation[]>([]);
   const [mapSize, setMapSize] = useState<number>(0);
   const [playerAssets, setPlayerAssets] = useState<Map<string, Assets>>();
-  const [playerLocations, setPlayerLocations] = useState<Location[]>([]);
   const [playing, setPlaying] = useState<boolean>(false);
   const [timer, setTimer] = useState<number>(0);
   const [timerId, setTimerId] = useState<number>(0);
@@ -80,10 +82,11 @@ export default function MapDisplay({
     context?.clearRect(0, 0, mapSize, mapSize);
 
     window.clearInterval(timerId);
+    setDeathLocations([]);
     setKillEvents(killEvents);
     setKillTimerId(null);
+    setKillerLocations([]);
     setPlaying(false);
-    setPlayerLocations([]);
     setTimer(0);
     setTimerId(0);
   }, [activeRound, playerAssets]);
@@ -101,23 +104,41 @@ export default function MapDisplay({
 
   useEffect(() => {
     if (mapData) {
-      const image = new window.Image();
-      image.src = deathMarker.src;
-      playerLocations.forEach((location) => {
+      const deathIcon: HTMLImageElement = new window.Image();
+      deathIcon.src = deathMarker.src;
+      deathLocations.forEach((location) => {
         if (canvasRef.current) {
           const imgX =
             (location.y * mapData.xMultiplier + mapData.xScalarToAdd) * mapSize;
           const imgY =
             (location.x * mapData.yMultiplier + mapData.yScalarToAdd) * mapSize;
           const context = canvasRef.current.getContext('2d');
-          image.onload = () => {
-            context?.drawImage(image, imgX, imgY);
+          deathIcon.onload = () => {
+            context?.drawImage(deathIcon, imgX, imgY);
           };
-          // context?.fillRect(imgX, imgY, 10, 10);
         }
       });
     }
-  }, [mapSize, playerLocations]);
+  }, [mapSize, deathLocations]);
+
+  useEffect(() => {
+    if (mapData) {
+      killerLocations.forEach((location) => {
+        if (canvasRef.current) {
+          const imgX =
+            (location.y * mapData.xMultiplier + mapData.xScalarToAdd) * mapSize;
+          const imgY =
+            (location.x * mapData.yMultiplier + mapData.yScalarToAdd) * mapSize;
+          const context = canvasRef.current.getContext('2d');
+          const killerAgentIcon: HTMLImageElement = new window.Image();
+          killerAgentIcon.src = location.asset;
+          killerAgentIcon.onload = () => {
+            context?.drawImage(killerAgentIcon, imgX, imgY, 30, 30);
+          };
+        }
+      });
+    }
+  }, [mapSize, killerLocations]);
 
   const delay = (ms: number) => {
     return new Promise((res) => {
@@ -138,26 +159,51 @@ export default function MapDisplay({
     setTimer(0);
     clearKillEvents();
     setPlaying(true);
-    setPlayerLocations([]);
+    setDeathLocations([]);
+    setKillerLocations([]);
     var intervalId = window.setInterval(() => {
       setTimer((prevTimer) => prevTimer + 1);
     }, 1000);
     setTimerId(intervalId);
+
     await delay(killEvents[0].kill_time_in_round);
     addKillEvent(killEvents[0]);
-    setPlayerLocations([
-      ...playerLocations,
-      killEvents[0].victim_death_location,
-    ]);
+    setDeathLocations([...deathLocations, killEvents[0].victim_death_location]);
+    killEvents[0].player_locations_on_kill.forEach((playerLocation) => {
+      if (
+        killEvents[0].killer_display_name === playerLocation.player_display_name
+      ) {
+        const killerLocation: KillerLocation = {
+          asset: killEvents[0].killer_assets.agent.small,
+          x: playerLocation.location.x,
+          y: playerLocation.location.y,
+        };
+        setKillerLocations([...killerLocations, killerLocation]);
+      }
+    });
+
     for (var i = 1; i < killEvents.length; i++) {
       await delay(
         killEvents[i].kill_time_in_round - killEvents[i - 1].kill_time_in_round
       );
       addKillEvent(killEvents[i]);
-      setPlayerLocations([
-        ...playerLocations,
+      setDeathLocations([
+        ...deathLocations,
         killEvents[i].victim_death_location,
       ]);
+      killEvents[i].player_locations_on_kill.forEach((playerLocation) => {
+        if (
+          killEvents[i].killer_display_name ===
+          playerLocation.player_display_name
+        ) {
+          const killerLocation: KillerLocation = {
+            asset: killEvents[i].killer_assets.agent.small,
+            x: playerLocation.location.x,
+            y: playerLocation.location.y,
+          };
+          setKillerLocations([...killerLocations, killerLocation]);
+        }
+      });
     }
     setPlaying(false);
     window.clearInterval(intervalId);
