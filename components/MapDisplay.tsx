@@ -104,8 +104,6 @@ export default function MapDisplay({
 
   useEffect(() => {
     if (mapData) {
-      const deathIcon: HTMLImageElement = new window.Image();
-      deathIcon.src = deathMarker.src;
       deathLocations.forEach((location) => {
         if (canvasRef.current) {
           const imgX =
@@ -113,6 +111,8 @@ export default function MapDisplay({
           const imgY =
             (location.x * mapData.yMultiplier + mapData.yScalarToAdd) * mapSize;
           const context = canvasRef.current.getContext('2d');
+          const deathIcon: HTMLImageElement = new window.Image();
+          deathIcon.src = deathMarker.src;
           deathIcon.onload = () => {
             context?.drawImage(deathIcon, imgX, imgY);
           };
@@ -168,7 +168,9 @@ export default function MapDisplay({
 
     await delay(killEvents[0].kill_time_in_round);
     addKillEvent(killEvents[0]);
-    setDeathLocations([...deathLocations, killEvents[0].victim_death_location]);
+    setDeathLocations((deathLocations) =>
+      deathLocations.concat(killEvents[0].victim_death_location)
+    );
     killEvents[0].player_locations_on_kill.forEach((playerLocation) => {
       if (
         killEvents[0].killer_display_name === playerLocation.player_display_name
@@ -178,30 +180,33 @@ export default function MapDisplay({
           x: playerLocation.location.x,
           y: playerLocation.location.y,
         };
-        setKillerLocations([...killerLocations, killerLocation]);
+        setKillerLocations((killerLocations) =>
+          killerLocations.concat(killerLocation)
+        );
       }
     });
 
     for (var i = 1; i < killEvents.length; i++) {
+      const killEvent: KillEvent = killEvents[i];
       await delay(
-        killEvents[i].kill_time_in_round - killEvents[i - 1].kill_time_in_round
+        killEvent.kill_time_in_round - killEvents[i - 1].kill_time_in_round
       );
-      addKillEvent(killEvents[i]);
-      setDeathLocations([
-        ...deathLocations,
-        killEvents[i].victim_death_location,
-      ]);
-      killEvents[i].player_locations_on_kill.forEach((playerLocation) => {
+      addKillEvent(killEvent);
+      setDeathLocations((deathLocations) =>
+        deathLocations.concat(killEvent.victim_death_location)
+      );
+      killEvent.player_locations_on_kill.forEach((playerLocation) => {
         if (
-          killEvents[i].killer_display_name ===
-          playerLocation.player_display_name
+          killEvent.killer_display_name === playerLocation.player_display_name
         ) {
           const killerLocation: KillerLocation = {
-            asset: killEvents[i].killer_assets.agent.small,
+            asset: killEvent.killer_assets.agent.small,
             x: playerLocation.location.x,
             y: playerLocation.location.y,
           };
-          setKillerLocations([...killerLocations, killerLocation]);
+          setKillerLocations((killerLocations) =>
+            killerLocations.concat(killerLocation)
+          );
         }
       });
     }
