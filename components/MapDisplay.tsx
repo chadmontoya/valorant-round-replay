@@ -3,7 +3,6 @@ import Image from 'next/image';
 import {
   Assets,
   KillEvent,
-  KillerLocation,
   Location,
   MapData,
   Player,
@@ -12,13 +11,17 @@ import {
 import MediaButton from './MediaButton';
 import { SECONDS_IN_MINUTES } from '../constants';
 
-import deathMarker from '../public/death-marker.svg';
+import allyMarker from '../public/ally-marker.svg';
+import allyDeathMarker from '../public/ally-death-marker.svg';
+import enemyDeathMarker from '../public/enemy-death-marker.svg';
+import enemyMarker from '../public/enemy-marker.svg';
 
 interface Props {
   activeRound: Round | null;
   addKillEvent: (newKillEvent: KillEvent) => void;
   clearKillEvents: () => void;
   mapData: MapData | null;
+  player: Player | undefined;
   players: Player[];
 }
 
@@ -27,14 +30,16 @@ export default function MapDisplay({
   addKillEvent,
   clearKillEvents,
   mapData,
+  player,
   players,
 }: Props) {
   const [deathLocations, setDeathLocations] = useState<Location[]>([]);
   const [killEvents, setKillEvents] = useState<KillEvent[]>([]);
   const [killTimerId, setKillTimerId] = useState<NodeJS.Timeout | null>(null);
-  const [killerLocations, setKillerLocations] = useState<KillerLocation[]>([]);
+  const [killerLocation, setKillerLocation] = useState<Location | null>(null);
   const [mapSize, setMapSize] = useState<number>(0);
   const [playerAssets, setPlayerAssets] = useState<Map<string, Assets>>();
+  const [playerLocations, setPlayerLocations] = useState<Location[]>([]);
   const [playing, setPlaying] = useState<boolean>(false);
   const [timer, setTimer] = useState<number>(0);
   const [timerId, setTimerId] = useState<number>(0);
@@ -64,7 +69,6 @@ export default function MapDisplay({
     killEvents.sort((killOne, killTwo) =>
       killOne.kill_time_in_round < killTwo.kill_time_in_round ? -1 : 1
     );
-
     killEvents.forEach((killEvent) => {
       killEvent.killer_assets = playerAssets?.get(
         killEvent.killer_display_name
@@ -77,15 +81,14 @@ export default function MapDisplay({
     if (killTimerId) {
       clearTimeout(killTimerId);
     }
-
     const context = canvasRef.current?.getContext('2d');
     context?.clearRect(0, 0, mapSize, mapSize);
-
     window.clearInterval(timerId);
     setDeathLocations([]);
     setKillEvents(killEvents);
     setKillTimerId(null);
-    setKillerLocations([]);
+    setKillerLocation(null);
+    setPlayerLocations([]);
     setPlaying(false);
     setTimer(0);
     setTimerId(0);
@@ -106,13 +109,18 @@ export default function MapDisplay({
     if (mapData) {
       deathLocations.forEach((location) => {
         if (canvasRef.current) {
+          const ally: boolean = player?.team == location.team;
           const imgX =
             (location.y * mapData.xMultiplier + mapData.xScalarToAdd) * mapSize;
           const imgY =
             (location.x * mapData.yMultiplier + mapData.yScalarToAdd) * mapSize;
           const context = canvasRef.current.getContext('2d');
           const deathIcon: HTMLImageElement = new window.Image();
-          deathIcon.src = deathMarker.src;
+          if (ally) {
+            deathIcon.src = allyDeathMarker.src;
+          } else {
+            deathIcon.src = enemyDeathMarker.src;
+          }
           deathIcon.onload = () => {
             context?.drawImage(deathIcon, imgX, imgY);
           };
@@ -123,22 +131,50 @@ export default function MapDisplay({
 
   useEffect(() => {
     if (mapData) {
-      killerLocations.forEach((location) => {
+      const context = canvasRef.current?.getContext('2d');
+      context?.clearRect(0, 0, mapSize, mapSize);
+      if (canvasRef.current && killerLocation) {
+        const imgX =
+          (killerLocation.y * mapData.xMultiplier + mapData.xScalarToAdd) *
+          mapSize;
+        const imgY =
+          (killerLocation.x * mapData.yMultiplier + mapData.yScalarToAdd) *
+          mapSize;
+        const context = canvasRef.current.getContext('2d');
+        const killerAgentIcon: HTMLImageElement = new window.Image();
+        if (killerLocation.agentIcon) {
+          killerAgentIcon.src = killerLocation.agentIcon;
+        }
+        killerAgentIcon.onload = () => {
+          context?.drawImage(killerAgentIcon, imgX, imgY, 30, 30);
+        };
+      }
+    }
+  }, [mapSize, killerLocation]);
+
+  useEffect(() => {
+    if (mapData) {
+      playerLocations.forEach((location) => {
         if (canvasRef.current) {
+          const ally: boolean = player?.team == location.team;
           const imgX =
             (location.y * mapData.xMultiplier + mapData.xScalarToAdd) * mapSize;
           const imgY =
             (location.x * mapData.yMultiplier + mapData.yScalarToAdd) * mapSize;
           const context = canvasRef.current.getContext('2d');
-          const killerAgentIcon: HTMLImageElement = new window.Image();
-          killerAgentIcon.src = location.asset;
-          killerAgentIcon.onload = () => {
-            context?.drawImage(killerAgentIcon, imgX, imgY, 30, 30);
+          const playerIcon: HTMLImageElement = new window.Image();
+          if (ally) {
+            playerIcon.src = allyMarker.src;
+          } else {
+            playerIcon.src = enemyMarker.src;
+          }
+          playerIcon.onload = () => {
+            context?.drawImage(playerIcon, imgX, imgY);
           };
         }
       });
     }
-  }, [mapSize, killerLocations]);
+  }, [mapSize, playerLocations]);
 
   const delay = (ms: number) => {
     return new Promise((res) => {
@@ -160,55 +196,74 @@ export default function MapDisplay({
     clearKillEvents();
     setPlaying(true);
     setDeathLocations([]);
-    setKillerLocations([]);
+    setKillerLocation(null);
+    setPlayerLocations([]);
+
     var intervalId = window.setInterval(() => {
       setTimer((prevTimer) => prevTimer + 1);
     }, 1000);
     setTimerId(intervalId);
-
     await delay(killEvents[0].kill_time_in_round);
     addKillEvent(killEvents[0]);
-    setDeathLocations((deathLocations) =>
-      deathLocations.concat(killEvents[0].victim_death_location)
-    );
-    killEvents[0].player_locations_on_kill.forEach((playerLocation) => {
-      if (
-        killEvents[0].killer_display_name === playerLocation.player_display_name
-      ) {
-        const killerLocation: KillerLocation = {
-          asset: killEvents[0].killer_assets.agent.small,
-          x: playerLocation.location.x,
-          y: playerLocation.location.y,
+    const deathLocation: Location = {
+      team: killEvents[0].victim_team,
+      x: killEvents[0].victim_death_location.x,
+      y: killEvents[0].victim_death_location.y,
+    };
+    setDeathLocations((deathLocations) => deathLocations.concat(deathLocation));
+    const locations: Location[] = [];
+    killEvents[0].player_locations_on_kill.forEach((location) => {
+      if (killEvents[0].killer_display_name === location.player_display_name) {
+        const killerLocation: Location = {
+          agentIcon: killEvents[0].killer_assets.agent.small,
+          x: location.location.x,
+          y: location.location.y,
         };
-        setKillerLocations((killerLocations) =>
-          killerLocations.concat(killerLocation)
-        );
+        setKillerLocation(killerLocation);
+      } else {
+        const playerLocation: Location = {
+          team: location.player_team,
+          x: location.location.x,
+          y: location.location.y,
+        };
+        locations.push(playerLocation);
       }
     });
+    setPlayerLocations(locations);
 
     for (var i = 1; i < killEvents.length; i++) {
       const killEvent: KillEvent = killEvents[i];
+      const deathLocation: Location = {
+        team: killEvent.victim_team,
+        x: killEvent.victim_death_location.x,
+        y: killEvent.victim_death_location.y,
+      };
       await delay(
         killEvent.kill_time_in_round - killEvents[i - 1].kill_time_in_round
       );
       addKillEvent(killEvent);
       setDeathLocations((deathLocations) =>
-        deathLocations.concat(killEvent.victim_death_location)
+        deathLocations.concat(deathLocation)
       );
-      killEvent.player_locations_on_kill.forEach((playerLocation) => {
-        if (
-          killEvent.killer_display_name === playerLocation.player_display_name
-        ) {
-          const killerLocation: KillerLocation = {
-            asset: killEvent.killer_assets.agent.small,
-            x: playerLocation.location.x,
-            y: playerLocation.location.y,
+      const locations: Location[] = [];
+      killEvent.player_locations_on_kill.forEach((location) => {
+        if (killEvent.killer_display_name === location.player_display_name) {
+          const killerLocation: Location = {
+            agentIcon: killEvent.killer_assets.agent.small,
+            x: location.location.x,
+            y: location.location.y,
           };
-          setKillerLocations((killerLocations) =>
-            killerLocations.concat(killerLocation)
-          );
+          setKillerLocation(killerLocation);
+        } else {
+          const playerLocation: Location = {
+            team: location.player_team,
+            x: location.location.x,
+            y: location.location.y,
+          };
+          locations.push(playerLocation);
         }
       });
+      setPlayerLocations(locations);
     }
     setPlaying(false);
     window.clearInterval(intervalId);

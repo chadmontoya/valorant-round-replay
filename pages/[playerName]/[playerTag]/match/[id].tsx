@@ -38,7 +38,9 @@ export default function MatchData() {
   const playerName = router.query.playerName;
   const playerTag = router.query.playerTag;
 
-  const player = players.find((player) => player.puuid === account?.puuid);
+  const player: Player | undefined = players.find(
+    (player) => player.puuid === account?.puuid
+  );
 
   useEffect(() => {
     if (!router.isReady) return;
@@ -133,6 +135,7 @@ export default function MatchData() {
             addKillEvent={addKillEvent}
             clearKillEvents={clearKillEvents}
             mapData={mapData}
+            player={player}
             players={players}
           />
         </div>

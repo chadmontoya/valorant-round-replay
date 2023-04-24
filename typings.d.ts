@@ -104,13 +104,9 @@ export interface KillEvent {
   victim_team: string;
 }
 
-export interface KillerLocation {
-  asset: string;
-  x: number;
-  y: number;
-}
-
 export interface Location {
+  agentIcon?: string;
+  team?: string;
   x: number;
   y: number;
 }
