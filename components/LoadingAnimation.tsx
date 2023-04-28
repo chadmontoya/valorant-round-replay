@@ -1,6 +1,6 @@
 export default function LoadingAnimation() {
   return (
-    <div className='flex flex-col items-center'>
+    <div>
       <svg
         aria-hidden='true'
         className='mr-2 w-10 h-10 text-primary-light animate-spin dark:text-gray-600 fill-secondary-dark'

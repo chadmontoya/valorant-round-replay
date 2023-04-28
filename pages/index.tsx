@@ -3,39 +3,50 @@ import { useState } from 'react';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Account, Inputs, Match } from '../typings';
 
+import LoadingAnimation from '../components/LoadingAnimation';
 import MatchList from '../components/MatchList';
-import HenrikDevValorantAPI from 'unofficial-valorant-api';
+import HenrikDevValorantAPI, { APIResponse } from 'unofficial-valorant-api';
+import { API_ACCOUNT_ERROR_MESSAGE } from '../constants';
 
 const VAPI = new HenrikDevValorantAPI();
 
 export default function Home() {
   const [account, setAccount] = useState<Account | null>(null);
+  const [apiError, setApiError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [matches, setMatches] = useState<Match[]>([]);
 
-  const { register, handleSubmit } = useForm<Inputs>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<Inputs>();
 
   const onSubmit: SubmitHandler<Inputs> = async (data) => {
     setAccount(null);
     setMatches([]);
     setLoading(true);
 
-    const [account, matchList] = await Promise.all([
-      VAPI.getAccount({ name: data.player_name, tag: data.player_tag }),
-      VAPI.getMatches({
+    const accountResponse: APIResponse = await VAPI.getAccount({
+      name: data.player_name,
+      tag: data.player_tag,
+    });
+
+    if (accountResponse.error) {
+      setApiError(API_ACCOUNT_ERROR_MESSAGE);
+    } else {
+      const matchListResponse: APIResponse = await VAPI.getMatches({
         region: data.region,
         name: data.player_name,
         tag: data.player_tag,
         size: 10,
         filter: data.game_mode,
-      }),
-    ]);
+      });
+      setApiError('');
+      setAccount(accountResponse.data as Account);
+      setMatches(matchListResponse.data as Match[]);
+    }
 
-    const accountData: Account = account.data as Account;
-    const matchListData: Match[] = matchList.data as Match[];
-
-    setAccount(accountData);
-    setMatches(matchListData);
     setLoading(false);
   };
 
@@ -56,11 +67,20 @@ export default function Home() {
               </label>
               <input
                 id='grid-riot-id'
-                className='appearance-none block w-full text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500'
+                className={`appearance-none block w-full border ${
+                  errors.player_name ? 'border-red-500' : 'border-gray-200'
+                } text-gray-700 rounded py-3 px-4 leading-tight ring-red-700`}
                 type='text'
                 placeholder='Player name'
-                {...register('player_name', { required: true })}
+                {...register('player_name', {
+                  required: 'Player name must not be empty',
+                })}
               />
+              {errors.player_name && (
+                <p className='text-xs text-red-500'>
+                  {errors.player_name.message}
+                </p>
+              )}
             </div>
             <div className='w-4/12 px-3 lg:w-4/12'>
               <label
@@ -71,11 +91,20 @@ export default function Home() {
               </label>
               <input
                 id='grid-tagline'
-                className='appearance-none block w-full text-gray-700 border border-gray-200 rounded py-3 px-4 leading-tight focus:outline-none focus:bg-white focus:border-gray-500'
+                className={`appearance-none block w-full border ${
+                  errors.player_tag ? 'border-red-500' : 'border-gray-200'
+                } text-gray-700 rounded py-3 px-4 leading-tight focus:outline-none`}
                 type='text'
                 placeholder='Player tag'
-                {...register('player_tag', { required: true })}
+                {...register('player_tag', {
+                  required: 'Player tag must not be empty',
+                })}
               />
+              {errors.player_tag && (
+                <p className='text-xs text-red-500'>
+                  {errors.player_tag.message}
+                </p>
+              )}
             </div>
           </div>
           <div className='flex mt-3 md:mt-0 lg:w-5/12'>
@@ -116,12 +145,12 @@ export default function Home() {
                 >
                   <option value='competitive'>Competitive</option>
                   <option value='unrated'>Unrated</option>
-                  <option value='spike rush'>Spike Rush</option>
+                  <option value='spikerush'>Spike Rush</option>
                 </select>
               </div>
             </div>
           </div>
-          <div className='mt-6 md:mt-auto px-3'>
+          <div className='mt-[22px] px-3'>
             <button
               className='bg-secondary-dark w-full text-white font-bold py-3 px-4 rounded disabled:opacity-40'
               disabled={loading}
@@ -132,7 +161,19 @@ export default function Home() {
           </div>
         </div>
       </form>
-      <MatchList account={account} matchList={matches} loading={loading} />
+      {loading && (
+        <div className='flex flex-col items-center mt-20'>
+          <LoadingAnimation />
+        </div>
+      )}
+      {!loading && matches && (
+        <MatchList account={account} matchList={matches} />
+      )}
+      {!loading && apiError && (
+        <div className='flex flex-col items-center mt-20'>
+          <p>{apiError}</p>
+        </div>
+      )}
     </div>
   );
 }
