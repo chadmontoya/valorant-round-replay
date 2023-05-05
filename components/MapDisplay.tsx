@@ -9,7 +9,7 @@ import {
   Round,
 } from '../typings';
 import MediaButton from './MediaButton';
-import { SECONDS_IN_MINUTES } from '../constants';
+import { ICON_MAP_SCALE, SECONDS_IN_MINUTES } from '../constants';
 
 import allyMarker from '../public/ally-marker.svg';
 import allyDeathMarker from '../public/ally-death-marker.svg';
@@ -145,8 +145,10 @@ export default function MapDisplay({
         if (killerLocation.agentIcon) {
           killerAgentIcon.src = killerLocation.agentIcon;
         }
+        const width = mapSize * ICON_MAP_SCALE;
+        const height = mapSize * ICON_MAP_SCALE;
         killerAgentIcon.onload = () => {
-          context?.drawImage(killerAgentIcon, imgX, imgY, 30, 30);
+          context?.drawImage(killerAgentIcon, imgX, imgY, width, height);
         };
       }
     }

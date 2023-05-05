@@ -40,6 +40,7 @@ export default function MatchItem({ account, matchItem }: Props) {
                 width={50}
                 height={50}
                 className='rounded-full'
+                priority={true}
               />
             )}
           </div>

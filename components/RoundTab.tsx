@@ -17,12 +17,12 @@ export default function RoundTab({
 
   return (
     <div
-      className='flex flex-col justify-between items-center h-36 mx-1 mb-5 bg-primary-dark-variant cursor-pointer hover:opacity-50'
+      className='flex flex-col justify-between items-center h-36 mb-5 bg-primary-dark-variant cursor-pointer hover:opacity-50'
       onClick={() => {
         handleRoundClick(roundNumber);
       }}
     >
-      <div className='flex flex-col items-center w-12 text-sm'>
+      <div className='flex flex-col items-center w-12 text-s 2xl:w-14'>
         {roundNumber + 1}
       </div>
       <div

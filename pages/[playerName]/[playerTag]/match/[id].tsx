@@ -112,7 +112,7 @@ export default function MatchData() {
       ) : (
         <div>
           <h1>Round {activeRoundNumber + 1}</h1>
-          <div className='flex overflow-x-auto scrollbar-thin scrollbar-thumb-secondary-dark scrollbar-thumb-rounded-full scrollbar-track-rounded-full'>
+          <div className='flex overflow-x-auto scrollbar-thin scrollbar-thumb-secondary-dark scrollbar-thumb-rounded-full scrollbar-track-rounded-full gap-2'>
             {rounds.map((round, i) => (
               <RoundTab
                 key={i}
@@ -125,9 +125,11 @@ export default function MatchData() {
           </div>
         </div>
       )}
-      <div className='flex flex-col-reverse mt-3 2xl:mt-0 lg:flex-row-reverse justify-between select-none'>
-        <div className='lg:w-1/2 relative right-0'>
-          <div className='right-0 space-y-3'>{killBanners}</div>
+      <div className='flex flex-col-reverse mt-3 justify-between select-none lg:flex-row-reverse'>
+        <div className='relative right-0 lg:ml-3 lg:w-1/2 2xl:ml-10'>
+          <div className='flex flex-col-reverse lg:flex-col gap-1'>
+            {killBanners}
+          </div>
         </div>
         <div className='lg:w-1/2'>
           <MapDisplay

@@ -16,38 +16,41 @@ function KillBanner({ killEvent, player }: Props) {
         ally_kill
           ? 'from-color-win to-color-lose'
           : 'from-color-lose to-color-win'
-      } justify-between max-w-xl`}
+      } justify-between`}
     >
       <div className='flex'>
         <Image
           src={killEvent.killer_assets.agent.killfeed}
           alt={killEvent.killer_display_name}
-          width={70}
-          height={65}
+          width={60}
+          height={50}
+          priority={true}
         />
-        <span className='font-semibold tracking-wide flex items-center'>
+        <span className='font-semibold text-xs tracking-wide flex items-center lg:text-sm'>
           {killEvent?.killer_display_name}
         </span>
       </div>
-      <div className='flex'>
+      <div className='m-auto'>
         <Image
           src={killEvent.damage_weapon_assets.killfeed_icon}
           alt={killEvent.damage_weapon_name}
-          width={70}
-          height={65}
+          width={55}
+          height={35}
           className='-scale-x-100'
+          priority={true}
         />
       </div>
       <div className='flex'>
-        <span className='font-semibold tracking-wide flex items-center'>
+        <span className='font-semibold text-xs tracking-wide flex items-center lg:text-sm'>
           {killEvent?.victim_display_name}
         </span>
         <Image
           src={killEvent.victim_assets.agent.killfeed}
           alt={killEvent.victim_display_name}
-          width={70}
-          height={65}
+          width={60}
+          height={50}
           className='-scale-x-100'
+          priority={true}
         />
       </div>
     </div>
