@@ -16,7 +16,7 @@ import {
 import RoundTab from '../../../../components/RoundTab';
 import HenrikDevValorantAPI from 'unofficial-valorant-api';
 import { DEFAULT_LOCALE, MAP_ENDPOINT } from '../../../../constants';
-import LoadingAnimation from '../../../../components/LoadingAnimation';
+import LoadingAnimation from '../../../../components/ui/LoadingAnimation';
 import MapDisplay from '../../../../components/MapDisplay';
 import KillBanner from '../../../../components/KillBanner';
 

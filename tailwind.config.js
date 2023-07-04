@@ -10,10 +10,10 @@ module.exports = {
       colors: {
         'color-lose': '#EE5350',
         'color-win': '#17E5B4',
-        'primary-dark': '#0F1923',
+        'primary-dark': '#0E1822',
         'primary-dark-variant': '#1A2733',
         'primary-light': '#ECE8E1',
-        'secondary-dark': '#FF4655',
+        'secondary-dark': '#FD4654',
       },
     },
   },
