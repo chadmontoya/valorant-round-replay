@@ -22,8 +22,8 @@ export default function MatchItem({ account, matchItem }: Props) {
           pathname: `[playerName]/[playerTag]/match/[id]`,
           query: {
             id: matchItem.metadata.matchid,
-            playerName: player?.name,
-            playerTag: player?.tag,
+            playerName: account?.name,
+            playerTag: account?.tag,
           },
         }}
       >
