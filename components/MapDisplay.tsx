@@ -9,12 +9,17 @@ import {
   Round,
 } from '../typings';
 import MediaButton from './MediaButton';
-import { ICON_MAP_SCALE, SECONDS_IN_MINUTES } from '../constants';
+import { ICON_MAP_SCALE } from '../constants';
 
 import allyMarker from '../public/ally-marker.svg';
 import allyDeathMarker from '../public/ally-death-marker.svg';
 import enemyDeathMarker from '../public/enemy-death-marker.svg';
 import enemyMarker from '../public/enemy-marker.svg';
+import {
+  formatSeconds,
+  getKillEvents,
+  getPlayerAssets,
+} from '../util/map-display-util';
 
 interface Props {
   activeRound: Round | null;
@@ -60,27 +65,15 @@ export default function MapDisplay({
   }, [imageRef]);
 
   useEffect(() => {
-    let killEvents: KillEvent[] = [];
-
-    activeRound?.player_stats.forEach((playerStat) => {
-      killEvents = killEvents.concat(playerStat.kill_events);
-    });
-
-    killEvents.sort((killOne, killTwo) =>
-      killOne.kill_time_in_round < killTwo.kill_time_in_round ? -1 : 1
+    const killEvents: KillEvent[] = getKillEvents(
+      activeRound?.player_stats,
+      playerAssets
     );
-    killEvents.forEach((killEvent) => {
-      killEvent.killer_assets = playerAssets?.get(
-        killEvent.killer_display_name
-      ) as Assets;
-      killEvent.victim_assets = playerAssets?.get(
-        killEvent.victim_display_name
-      ) as Assets;
-    });
 
     if (killTimerId) {
       clearTimeout(killTimerId);
     }
+
     const context = canvasRef.current?.getContext('2d');
     context?.clearRect(0, 0, mapSize, mapSize);
     window.clearInterval(timerId);
@@ -92,16 +85,10 @@ export default function MapDisplay({
     setPlaying(false);
     setTimer(0);
     setTimerId(0);
-  }, [activeRound, playerAssets]);
+  }, [activeRound]);
 
   useEffect(() => {
-    const playerAssets = new Map<string, Assets>();
-    players.forEach((player) => {
-      const playerDisplayName = player.name + '#' + player.tag;
-      if (!playerAssets.has(playerDisplayName)) {
-        playerAssets.set(player.name + '#' + player.tag, player.assets);
-      }
-    });
+    const playerAssets: Map<string, Assets> = getPlayerAssets(players);
     setPlayerAssets(playerAssets);
   }, [players]);
 
@@ -127,7 +114,7 @@ export default function MapDisplay({
         }
       });
     }
-  }, [mapSize, deathLocations]);
+  }, [mapData, mapSize, deathLocations, player]);
 
   useEffect(() => {
     if (mapData) {
@@ -152,7 +139,7 @@ export default function MapDisplay({
         };
       }
     }
-  }, [mapSize, killerLocation]);
+  }, [mapData, mapSize, killerLocation]);
 
   useEffect(() => {
     if (mapData) {
@@ -176,21 +163,13 @@ export default function MapDisplay({
         }
       });
     }
-  }, [mapSize, playerLocations]);
+  }, [mapData, mapSize, player, playerLocations]);
 
   const delay = (ms: number) => {
     return new Promise((res) => {
       const timeoutId = setTimeout(res, ms);
       setKillTimerId(timeoutId);
     });
-  };
-
-  const formatSeconds = (seconds: number): string => {
-    const minutes = Math.floor(seconds / SECONDS_IN_MINUTES);
-    const remainingSeconds = seconds % SECONDS_IN_MINUTES;
-    const minutesString = minutes.toString().padStart(2, '0');
-    const secondsString = remainingSeconds.toString().padStart(2, '0');
-    return `${minutesString}:${secondsString}`;
   };
 
   const handlePlay = async () => {
